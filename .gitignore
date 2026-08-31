@@ -1,0 +1,21 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.DS_Store
+*.ipynb_checkpoints/
+.streamlit/secrets.toml
+
+# Dataset is intentionally not committed.
+data/HAM10000_images_part_1/
+data/HAM10000_images_part_2/
+data/HAM10000_metadata.csv
+data/splits/*.csv
+data/splits/*.jpg
+
+# Trained weights and generated reports can be large; keep placeholders in git.
+models/*.pt
+outputs/*
+!outputs/.gitkeep
+!models/.gitkeep
