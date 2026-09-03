@@ -175,10 +175,6 @@ Run locally with:
 streamlit run app.py
 ```
 
-<div align="center">
-  <img src="assets/app_demo.png" width="800" alt="Streamlit app">
-</div>
-
 ---
 
 ## Project Structure
@@ -236,25 +232,9 @@ interpretable-dermoscopic-image-classifier-xai/
 
 ---
 
-## Limitations
-
-This is a portfolio-scale implementation. It does not cover external clinical validation, clinical calibration, domain shift, uncertainty estimation, lesion segmentation, demographic subgroup analysis, or active learning.
-
-Grad-CAM and SHAP should be treated as **interpretations of model behaviour**, not proof of causal reasoning.
-
----
-
 ## Tech Stack
 
 `Python` · `PyTorch` · `Torchvision` · `DenseNet121` · `Grad-CAM` · `SHAP` · `Scikit-learn` · `Streamlit`
-
----
-
-## Author
-
-**Ahan Roy**
-
-GitHub: `github.com/<your-username>`
 
 ---
 
