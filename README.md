@@ -1,61 +1,65 @@
 # Explainable Skin Lesion Classification
 
-The project uses a single **DenseNet121** model with ImageNet transfer learning to classify the seven HAM10000 diagnostic categories. The classification pipeline uses **class-weighted cross-entropy** to counter the strongly imbalanced label distribution. At inference time, every image gets two complementary explanations:
+**Author: Ahan Roy**
 
-- **Grad-CAM** — highlights spatial regions associated with the predicted class at the final convolutional feature stage.
-- **SHAP (GradientExplainer)** — attributes the predicted class score back toward the input pixels using expected gradients.
+A compact deep learning project for **7-class dermoscopic skin-lesion classification** using the **HAM10000** dataset. The model uses **DenseNet121 transfer learning**, class-weighted training, and two explanation methods — **Grad-CAM** and **SHAP** — with a small Streamlit interface.
 
-The Streamlit app puts those pieces together in one small interface: upload an image → get the predicted class and confidence → inspect Grad-CAM and SHAP overlays → read a short model-behaviour explanation.
-
-> **Scope:** this is an educational/research portfolio project, not a medical device and not a diagnostic tool.
+> **Scope:** This is an research portfolio project. It is not a medical device or a diagnostic tool.
 
 ---
 
-## Why I built it
+## Why this project?
 
-A plain image classifier can look impressive while still being hard to trust. A portfolio project is more interesting when it demonstrates the complete reasoning loop:
+A classifier can give a good score and still be difficult to inspect. I wanted the project to cover the full workflow:
 
-**data preparation → imbalance handling → transfer learning → evaluation → visual explanation → failure analysis → interactive inference**
+**data preparation → imbalance handling → training → evaluation → explanation → failure analysis → deployment**
 
-The goal here is not to benchmark ten architectures. It is to take **one sensible CNN architecture and execute the pipeline carefully enough that the mistakes are inspectable too.**
+The goal is not to compare many models, but to build one complete and explainable pipeline.
 
 ---
 
-## What the pipeline contains
+## Pipeline
 
 ```text
-HAM10000 metadata + images
-          │
-          ▼
-  patient-aware train/val/test split
-          │
-          ▼
-  resize + augmentation + normalization
-          │
-          ▼
- DenseNet121 (ImageNet weights)
-          │
-          ├── weighted cross-entropy
-          ├── macro-F1 monitoring
-          └── early stopping
-          │
-          ▼
-       best checkpoint
-          │
-          ├── classification metrics
-          ├── confusion matrix
-          ├── one-vs-rest ROC/AUC
-          ├── misclassification review
-          └── Streamlit inference
-                         │
-                         ├── prediction + confidence
-                         ├── Grad-CAM
-                         └── SHAP
+HAM10000
+   │
+   ▼
+Lesion-aware train / validation / test split
+   │
+   ▼
+Resize + normalization + augmentation
+   │
+   ▼
+DenseNet121 (ImageNet transfer learning)
+   │
+   ├── Weighted Cross-Entropy
+   ├── Macro-F1 checkpoint selection
+   └── Early stopping
+   │
+   ▼
+Evaluation
+   │
+   ├── Accuracy / Precision / Recall / F1
+   ├── ROC-AUC
+   ├── Confusion Matrix
+   └── Failure Analysis
+   │
+   ▼
+Explainability
+   ├── Grad-CAM
+   └── SHAP
+   │
+   ▼
+Streamlit App
 ```
 
-### Seven classes
+---
 
-| Code | Diagnosis |
+## Dataset
+
+The project uses **HAM10000 (Human Against Machine with 10,000 training images)** with seven diagnostic classes:
+
+| Code | Class |
 |---|---|
 | `akiec` | Actinic keratoses / Bowen's disease |
 | `bcc` | Basal cell carcinoma |
@@ -65,37 +69,139 @@ HAM10000 metadata + images
 | `nv` | Melanocytic nevi |
 | `vasc` | Vascular lesions |
 
+The dataset contains **10,015 dermoscopic images**. The images themselves are not included in this repository.
+
 ---
 
-## Repository structure
+## Model
+
+**DenseNet121** is used with ImageNet pretrained weights. For CPU-friendly development, the DenseNet feature extractor is kept frozen and the final 7-class classification head is trained.
+
+The training loss uses **class weights** because the HAM10000 classes are highly imbalanced.
+
+---
+
+## Results
+
+The supplied test confusion matrix contains **2,004 test images**, with **1,409 correct predictions**.
+
+| Metric | Test Result |
+|---|---:|
+| Accuracy | **70.31%** |
+| Macro Precision | **44.76%** |
+| Macro Recall | **52.66%** |
+| Macro F1 | **47.86%** |
+| Macro ROC-AUC (OvR) | **88.37%** |
+
+### Confusion Matrix
+
+![Confusion Matrix](assets/confusion_matrix.png)
+
+### ROC-AUC
+
+The one-vs-rest AUC values from the supplied evaluation output are:
+
+| Class | AUC |
+|---|---:|
+| `akiec` | 0.952 |
+| `bcc` | 0.947 |
+| `bkl` | 0.861 |
+| `df` | 0.794 |
+| `mel` | 0.810 |
+| `nv` | 0.916 |
+| `vasc` | 0.906 |
+
+![ROC Curves](assets/roc_curves.png)
+
+The gap between accuracy and macro-F1 is a useful reminder that overall accuracy alone does not describe performance well on this imbalanced dataset.
+
+---
+
+## Explainability
+
+Every prediction can be inspected using two complementary views.
+
+**Grad-CAM** highlights spatial regions in the DenseNet feature maps associated with the predicted class.
+
+**SHAP** uses `GradientExplainer` to attribute the predicted class score back toward the input image.
+
+![Explainability comparison](assets/explainability_comparison.png)
+
+The two explanations are not expected to match exactly. Grad-CAM is **feature-map based**, while SHAP is **input-attribution based**.
+
+---
+
+## Failure Analysis
+
+The evaluation pipeline automatically reviews **2–3 high-confidence misclassified samples** using Grad-CAM.
+
+I use these cases to check:
+
+- whether the model focused on the lesion or an image artifact
+- whether visually similar classes are being confused
+- whether the model is overconfident when it is wrong
+
+![Failure analysis](assets/failure_analysis.png)
+
+This is one of the main parts of the project: the aim is not only to report where the model succeeds, but also to inspect where it fails.
+
+---
+
+## Streamlit App
+
+The app combines prediction and explainability in one interface.
+
+It shows:
+
+- predicted class
+- confidence score
+- class probabilities
+- original image
+- Grad-CAM overlay
+- SHAP overlay
+- short natural-language explanation
+
+Run locally with:
+
+```bash
+streamlit run app.py
+```
+
+![Streamlit app](assets/app_demo.png)
+
+---
+
+## Project Structure
 
 ```text
-explainable-skin-lesion-classifier/
+interpretable-dermoscopic-image-classifier-xai/
+│
 ├── app.py
 ├── README.md
 ├── requirements.txt
+├── pyproject.toml
+├── LICENSE
 ├── .gitignore
-├── .streamlit/
-│   └── config.toml
+│
+├── assets/
+│   ├── app_demo.png
+│   ├── confusion_matrix.png
+│   ├── explainability_comparison.png
+│   ├── failure_analysis.png
+│   └── roc_curves.png
+│
 ├── data/
-│   ├── README.md
-│   └── ... HAM10000 files live here ...
+│   └── README.md
+│
 ├── models/
-│   ├── README.md
-│   └── densenet121_ham10000.pt        # generated after training
-├── outputs/
-│   ├── README.md
-│   ├── metrics.json                    # generated
-│   ├── confusion_matrix.png            # generated
-│   ├── roc_curves.png                  # generated
-│   ├── test_predictions.csv            # generated
-│   └── failure_examples/               # generated
+│   └── README.md
+│
 ├── scripts/
 │   ├── preprocess.py
 │   ├── train.py
 │   └── evaluate.py
+│
 └── src/
-    ├── __init__.py
     ├── config.py
     ├── data.py
     ├── explainability.py
@@ -106,170 +212,45 @@ explainable-skin-lesion-classifier/
 
 ---
 
-## Setup
+## Key Design Choices
 
-### 1. Clone the repository
+**Weighted loss** — gives more importance to under-represented classes.
 
-```bash
-git clone <your-repository-url>
-cd explainable-skin-lesion-classifier
-```
+**Macro-F1** — used for checkpoint selection so the dominant `nv` class does not decide the model quality by itself.
 
-### 2. Create an environment
+**Lesion-aware splitting** — keeps related lesion images together and reduces the risk of leakage between train and evaluation data.
 
-```bash
-python -m venv .venv
+**Grad-CAM + SHAP** — gives two different views of what the model used for its prediction.
 
-# Windows
-.venv\Scripts\activate
-
-# macOS / Linux
-source .venv/bin/activate
-```
-
-### 3. Install dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-For PyTorch, use the wheel that matches the machine's CUDA/CPU setup when needed. The project code only relies on the stable `torch` / `torchvision` APIs exposed by the requirements above.
-
-### 4. Add HAM10000
-
-Put the metadata CSV and the two image directories under `data/`. The expected layout is documented in [`data/README.md`](data/README.md).
-
-### 5. Build lesion-aware splits
-
-```bash
-python scripts/preprocess.py
-```
-
-The split step keeps images from the same lesion together. This is an intentional choice: leakage through related patient images can make validation performance look cleaner than it really is.
-
-### 6. Train
-
-```bash
-python scripts/train.py
-```
-
-Useful overrides:
-
-```bash
-python scripts/train.py --epochs 20 --batch-size 32 --lr 3e-4
-```
-
-Training saves the best checkpoint by validation macro-F1 to:
-
-```text
-models/densenet121_ham10000.pt
-```
-
-### 7. Evaluate and generate failure examples
-
-```bash
-python scripts/evaluate.py
-```
-
-This produces:
-
-- accuracy, macro precision, macro recall and macro F1
-- multiclass one-vs-rest ROC-AUC
-- confusion matrix image
-- ROC curve image
-- test-set prediction CSV
-- three high-confidence misclassification examples with Grad-CAM overlays
+**Single model** — DenseNet121 is intentionally the only CNN in the project; this is an explainability-focused pipeline, not a benchmarking study.
 
 ---
 
-## Evaluation results
+## Limitations
 
-The repository is designed so the actual values are generated from my own run rather than written into the README ahead of time.
+This is a portfolio-scale implementation. It does not cover external clinical validation, clinical calibration, domain shift, uncertainty estimation, lesion segmentation, demographic subgroup analysis, or prospective clinical evaluation.
 
-After `python scripts/evaluate.py`, copy the values from `outputs/metrics.json` into the table below:
-
-| Metric | Test score |
-|---|---:|
-| Accuracy | `XX.XX%` |
-| Macro Precision | `XX.XX%` |
-| Macro Recall | `XX.XX%` |
-| Macro F1 | `XX.XX%` |
-| Macro ROC-AUC (OvR) | `XX.XX%` |
-
-Per-class precision / recall / F1 are also saved under `metrics.json` so the weaker rare classes are not hidden by one overall accuracy number.
+Grad-CAM and SHAP should be treated as **interpretations of model behaviour**, not proof of causal reasoning.
 
 ---
 
-## Failure analysis
+## Tech Stack
 
-The evaluation script automatically selects **2–3 high-confidence mistakes** and produces a small visual review set in:
-
-```text
-outputs/failure_examples/
-```
-
-For each example, the generated image shows the original lesion beside the Grad-CAM overlay together with the true label, predicted label and confidence.
-
-When I review those cases, the main questions are:
-
-1. Did the model focus on the lesion, or on irrelevant artifacts such as hair / ruler marks / image borders?
-2. Is the error clinically understandable because the competing categories share visual traits?
-3. Does the model become overconfident on a visually ambiguous case?
-
-That last point matters more than chasing a single headline metric: a useful classifier should also have mistakes that I can inspect and explain.
+`Python` · `PyTorch` · `Torchvision` · `DenseNet121` · `Grad-CAM` · `SHAP` · `Scikit-learn` · `Streamlit`
 
 ---
 
-## Explainability design
+## Author
 
-### Grad-CAM
+**Ahan Roy**
 
-Grad-CAM is computed from the final DenseNet121 dense block. The implementation lives in `src/explainability.py` so the same logic is reused by the evaluation script and the Streamlit app.
-
-The map is class-specific: it backpropagates the logit of the predicted class, averages gradients across spatial positions, and uses those weights to form a coarse localization map. The map is then resized and blended with the original image.
-
-### SHAP
-
-The app uses `shap.GradientExplainer` with a small deterministic neutral background. Only the **predicted class** is explained at inference time because explaining all seven outputs interactively would make the demo unnecessarily slow.
-
-The result is converted into a spatial attribution map by aggregating absolute attributions across RGB channels. This gives a directly comparable visual overlay without pretending the two methods mean the exact same thing.
-
-That distinction is intentional: **Grad-CAM is feature-map based; SHAP is input-attribution based.** Comparing them is part of the point of the project.
-
----
-
-## Streamlit app
-
-Run:
-
-```bash
-streamlit run app.py
-```
-
-The app provides:
-
-- predicted HAM10000 class
-- confidence score
-- uploaded image
-- Grad-CAM overlay
-- SHAP overlay
-- class probability chart
-- natural-language interpretation of the model behaviour
-
-### Screenshots
-
-Add the actual screenshots from your run here. Keeping them in `assets/screenshots/` makes the README self-contained for GitHub.
-
-```text
-assets/screenshots/
-├── app-overview.png
-├── gradcam-vs-shap.png
-└── failure-analysis.png
-```
+GitHub: `github.com/<your-username>`
 
 ---
 
 ## License and dataset note
+
+The source code is released under the **MIT License**.
 
 Before publishing a trained checkpoint or screenshots containing dataset examples, verify that your use of the HAM10000 dataset follows its stated terms and the terms of the source from which you obtained it.
 
