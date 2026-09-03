@@ -2,7 +2,7 @@
 
 **Author: Ahan Roy**
 
-A compact deep learning project for **7-class dermoscopic skin-lesion classification** using the **HAM10000** dataset. The model uses **DenseNet121 transfer learning**, class-weighted training, and two complementary explainability methods: **Grad-CAM** and **SHAP**.
+A compact deep learning project for **7-class dermoscopic skin-lesion classification** using the **HAM10000** dataset. The model uses **DenseNet121 transfer learning**, class-weighted training, and two complementary explainability methods: **Grad-CAM** and **SHAP**, with a simple user-interface.
 
 > **Scope:** This is an research portfolio project. It is not a medical device or a diagnostic tool.
 
