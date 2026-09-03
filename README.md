@@ -2,7 +2,7 @@
 
 **Author: Ahan Roy**
 
-A compact deep learning project for **7-class dermoscopic skin-lesion classification** using the **HAM10000** dataset. The model uses **DenseNet121 transfer learning**, class-weighted training, and two explanation methods — **Grad-CAM** and **SHAP** — with a small Streamlit interface.
+A compact deep learning project for **7-class dermoscopic skin-lesion classification** using the **HAM10000** dataset. The model uses **DenseNet121 transfer learning**, class-weighted training, and two complementary explainability methods: **Grad-CAM** and **SHAP**.
 
 > **Scope:** This is an research portfolio project. It is not a medical device or a diagnostic tool.
 
@@ -95,7 +95,9 @@ The supplied test confusion matrix contains **2,004 test images**, with **1,409 
 
 ### Confusion Matrix
 
-![Confusion Matrix](assets/confusion_matrix.png)
+<div align="center">
+  <img src="assets/confusion_matrix.png" width="650" alt="Confusion Matrix">
+</div>
 
 ### ROC-AUC
 
@@ -111,7 +113,9 @@ The one-vs-rest AUC values from the supplied evaluation output are:
 | `nv` | 0.916 |
 | `vasc` | 0.906 |
 
-![ROC Curves](assets/roc_curves.png)
+<div align="center">
+  <img src="assets/roc_curves.png" width="650" alt="ROC Curves">
+</div>
 
 The gap between accuracy and macro-F1 is a useful reminder that overall accuracy alone does not describe performance well on this imbalanced dataset.
 
@@ -125,7 +129,9 @@ Every prediction can be inspected using two complementary views.
 
 **SHAP** uses `GradientExplainer` to attribute the predicted class score back toward the input image.
 
-![Explainability comparison](assets/explainability_comparison.png)
+<div align="center">
+  <img src="assets/explainability_comparison.png" width="750" alt="Explainability comparison">
+</div>
 
 The two explanations are not expected to match exactly. Grad-CAM is **feature-map based**, while SHAP is **input-attribution based**.
 
@@ -141,7 +147,9 @@ I use these cases to check:
 - whether visually similar classes are being confused
 - whether the model is overconfident when it is wrong
 
-![Failure analysis](assets/failure_analysis.png)
+<div align="center">
+  <img src="assets/failure_analysis.png" width="700" alt="Failure analysis">
+</div>
 
 This is one of the main parts of the project: the aim is not only to report where the model succeeds, but also to inspect where it fails.
 
@@ -167,7 +175,9 @@ Run locally with:
 streamlit run app.py
 ```
 
-![Streamlit app](assets/app_demo.png)
+<div align="center">
+  <img src="assets/app_demo.png" width="800" alt="Streamlit app">
+</div>
 
 ---
 
@@ -228,7 +238,7 @@ interpretable-dermoscopic-image-classifier-xai/
 
 ## Limitations
 
-This is a portfolio-scale implementation. It does not cover external clinical validation, clinical calibration, domain shift, uncertainty estimation, lesion segmentation, demographic subgroup analysis, or prospective clinical evaluation.
+This is a portfolio-scale implementation. It does not cover external clinical validation, clinical calibration, domain shift, uncertainty estimation, lesion segmentation, demographic subgroup analysis, or active learning.
 
 Grad-CAM and SHAP should be treated as **interpretations of model behaviour**, not proof of causal reasoning.
 
